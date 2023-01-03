@@ -1,1 +1,1 @@
-# holbertonschool-monty
+Repository C - Stacks, Queues - LIFO, FIFO
