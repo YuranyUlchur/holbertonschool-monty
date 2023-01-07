@@ -1,68 +1,80 @@
 #include "monty.h"
 /**
- *_atoi - function a string
- *@s: varible punter
+ * is_number - checks if is a number
+ * @token: string to check id is a number
+ * Return: 0
  */
-int _atoi(char *s)
+int is_number(char *token)
 {
+	int i;
+
+	if (token == NULL)
+		return (-1);
+	for (i = 0; token[i] != '\0'; i++)
+	{
+		if (!(token[i] >= '0' && token[i] <= '9') && token[i] != '-')
+			return (-1);
+	}
 	return (0);
 }
-
 /**
- * _push - push int to a stack
- * @stack: linked lists for monty stack
- * @line_number: number of line opcode occurs on
+ * open_file_to_read - Open a monty files
+ * @filename: Name if monty file
+ * @stack: Structure
+ * Return: 0
  */
-void _push(stack_t **stack, unsigned int line_number)
+int open_file_to_read(char *filename, stack_t **stack)
 {
-	stack_t *new;
-	char *arg;
-	int push_arg;
+	FILE *in_file;
+	char *token = NULL, *buff_line = NULL, *number = NULL;
+	unsigned int line_counter = 0;
+	size_t buff_size;
 
-	push_arg = 0;
-	new = malloc(sizeof(stack_t));
-	if (!new)
+	in_file = fopen(filename, "r");
+	if (in_file == NULL)
 	{
-		printf("Error: malloc failed\n");
-		error_exit(stack);
+		fprintf(stderr, "Error: Can't open file %s\n", filename);
+		exit(EXIT_FAILURE);
 	}
-
-	arg = strtok(NULL, "\n ");
-	if (isnumber(arg) == 1 && arg != NULL)
+	while (getline(&buff_line, &buff_size, in_file) != EOF)
 	{
-		push_arg = atoi(arg);
+		token = strtok(buff_line, "\n\t\r ");
+		number = strtok(NULL, "\n\t\r ");
+		line_counter++;
+		if (token && token[0] != '#')
+		{
+			if (strcmp(token, "push") == 0)
+			{
+				if (is_number(number) == -1)
+				{
+					fprintf(stderr, "L%u: usage: push integer\n", line_counter);
+					_free(buff_line, in_file);
+				}
+				take_num = atoi(number);
+			}
+			/* printf("token = %s, number = %d\n", token, take_num); */
+			if (get_opcode(token, line_counter, stack) == 1)
+			{
+				fprintf(stderr, "L%u: unknown instruction %s\n", line_counter, token);
+				_free(buff_line, in_file);
+				free_stack(stack);
+			}
+		}
 	}
-	else
-	{
-		printf("L%d: usage: push integer\n", line_number);
-		error_exit(stack);
-	}
-
-	if (sq_flag == 1)
-	{
-		add_dnodeint_end(stack, push_arg);
-	}
-
-	if (sq_flag == 0)
-	{
-		add_dnodeint(stack, push_arg);
-	}
-
+	free(buff_line);
+	free_stack(stack);
+	fclose(in_file);
+	return (0);
 }
-
 /**
- * _pall - print all function
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * _free - Free line, close file and exit
+ * @buff_line:line
+ * @in_file: file
+ * Return: 0
  */
-void _pall(stack_t **stack, __attribute__ ((unused))unsigned int line_number)
+void _free(char *buff_line, FILE *in_file)
 {
-	stack_t *runner;
-
-	runner = *stack;
-	while (runner != NULL)
-	{
-		printf("%d\n", runner->n);
-		runner = runner->next;
-	}
+	free(buff_line);
+	fclose(in_file);
+	exit(EXIT_FAILURE);
 }
